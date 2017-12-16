@@ -46,7 +46,7 @@ for line in f_in.readlines():
         expr_list = ','.join(expr)
         expr_vals1 = expr_list.replace(',', '\t')
         expr_vals = expr_vals1.replace('\n', '')
-        expr_vals = expr_vals[0:len(expr_vals)-1]
+        expr_vals = expr_vals[0:len(expr_vals)]
         if "NO_NAME" not in line:
           if "unclassified" not in line:
               if "unknown" not in line:

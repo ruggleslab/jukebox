@@ -46,7 +46,7 @@ for line in f_in.readlines():
         expr_list = ','.join(expr)
         expr_vals1 = expr_list.replace(',', '\t')
         expr_vals = expr_vals1.replace('\n', '')
-        expr_vals_print = expr_vals[0:len(expr_vals)-1]
+        expr_vals_print = expr_vals[0:len(expr_vals)]
 	ex=str.split(expr_vals, '\t')
 	ex_float=[]
 	for item in ex:
