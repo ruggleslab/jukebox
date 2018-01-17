@@ -1,6 +1,13 @@
 ##R Shiny Wham! application
 
-## update 10.7 new input removes NO_NAMES
+## update 1.4 methods workflow now says Abundance, pairwise t-test 
+## heat with pvals as cellnote
+
+## update 1.10 search plot bars consistent width!
+
+## update 1.12 beautified plots, cellnote now says "<0.0001"!
+
+## update 1.17 error code for invalid file types!
 
 library(shiny)
 library(ggplot2)
@@ -13,6 +20,10 @@ library(rPython)
 library(shinythemes)
 library(data.table)
 library(stringr)
+library(randomcoloR)
+library(gplots)
+library(tidyr)
+library(dplyr)
 
 library(RColorBrewer)
 qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
@@ -107,22 +118,25 @@ get_spec_plot_list <- function(max_plots, input_n, exprDF, supplied_col_vector) 
       
       spec$Species <- as.character(spec$Species)
       spec$Species <- str_trunc(spec$Species, 50, "center")
+      spec$Species <- reorder(spec$Species, -spec$Exp)
+      spec$Abundance <- spec$Exp
 
-      p = ggplot(spec, aes(x=Groups, y=Exp, fill = Species)) +
-        geom_bar(position = "fill", stat='identity') +
+      p = ggplot(spec, aes(x=Groups, y=Abundance, fill = Species)) +
+        #geom_bar(position = "fill", stat='identity') +
+        stat_summary(fun.y = "mean", geom = "bar", position = "fill") +
         ggtitle(paste("Species Contribution for", gfam_uniq[i], sep =' ')) +
-        ylab("Relative Expression") +
+        ylab("Relative Abundance") +
         xlab("Group") +
-        theme(plot.title = element_text(size = 10),
+        theme(plot.title = element_text(size = 11),
               legend.position="right",
               #legend.key.width = unit(0.1, "cm"),
               #legend.key.height = unit(0.1, "cm"),
               legend.text = element_text(size=10),
-              legend.title = element_text(size=11),
+              legend.title = element_text(size=10),
               axis.title.y = element_text(size = 11),
               axis.title.x = element_text(size = 11),
-              axis.text.y = element_text(size = 10),
-              axis.text.x = element_text(size = 10)) +
+              axis.text.y = element_text(size = 11),
+              axis.text.x = element_text(size = 11)) +
         scale_fill_manual(values = supplied_col_vector)
     })
   })
@@ -136,22 +150,26 @@ download_spec_plot_list <- function(max_plots, i, exprDF, supplied_col_vector) {
   spec <- exprDF
   spec$Species <- as.character(spec$Species)
   spec$Species <- str_trunc(spec$Species, 50, "center")
-  p = ggplot(spec, aes(x=Groups, y=Exp, fill = Species)) +
-    geom_bar(position = "fill", stat='identity') +
+  spec$Species <- reorder(spec$Species, -spec$Exp)
+  spec$Abundance <- spec$Exp
+  
+  p = ggplot(spec, aes(x=Groups, y=Abundance, fill = Species)) +
+    #geom_bar(position = "fill", stat='identity') +
+    stat_summary(fun.y = "mean", geom = "bar", position = "fill") +
     ggtitle(paste("Species Contribution for \n", spec$Gfam[1], sep =' ')) +
-    ylab("Relative Expression") +
+    ylab("Relative Abundance") +
     xlab("Group") +
     guides(fill = guide_legend(nrow = 40))+
-    theme(plot.title = element_text(size = 10),
+    theme(plot.title = element_text(size = 22),
           legend.position="right",
           #legend.key.width = unit(0.1, "cm"),
           #legend.key.height = unit(0.1, "cm"),
           legend.text = element_text(size=10),
-          legend.title = element_text(size=11),
-          axis.title.y = element_text(size = 11),
-          axis.title.x = element_text(size = 11),
-          axis.text.y = element_text(size = 10),
-          axis.text.x = element_text(size = 10)) +
+          legend.title = element_text(size=22),
+          axis.title.y = element_text(size = 22),
+          axis.title.x = element_text(size = 22),
+          axis.text.y = element_text(size = 22),
+          axis.text.x = element_text(size = 22)) +
     scale_fill_manual(values = supplied_col_vector)
   # })
   # 
@@ -160,6 +178,91 @@ download_spec_plot_list <- function(max_plots, i, exprDF, supplied_col_vector) {
   # return(plot_output_list)
   p
 }
+
+#### exp table heatmaps!
+
+get_exp_heat_list <- function(max_plots, input_n, input_df, lab_df) {
+  # Insert plot output objects the list
+  plot_output_list <- lapply(1:input_n, function(i) {
+    plotname <- paste("plot", i, sep="")
+    savename <- paste("save", i, sep="")
+    plot_output_object <- plotOutput(plotname, height = 280, width = 250)
+    plot_output_object <- renderPlot({
+      spec_df <- input_df
+      Gfam_uniq = as.character(unique(spec_df$Gfam))
+      exp_table <- spec_df
+      new_df <- subset(exp_table, Gfam == Gfam_uniq[i])
+      new_mat <- data.matrix(new_df[,3:ncol(new_df)])
+      
+      exp_lab <- lab_df
+      lab_df2 <- subset(exp_lab, Gfam == Gfam_uniq[i])
+      lab_mat <- as.matrix(lab_df2[,3:ncol(lab_df2)])
+
+      rownames(new_mat) <- new_df[,2]
+      mat_title <- Gfam_uniq[i]
+      par(cex.main=0.7)
+      heatmap.2(new_mat,
+                cellnote = lab_mat,
+                notecol="black",
+                density.info="none",
+                main=mat_title,
+                #key = TRUE,
+                #keysize = 1.0,
+                breaks = seq(0, 0.05, by = 0.0005),
+                col=c(colorRampPalette(c("red", "white"))(n=100)),
+                dendrogram = 'none',
+                Rowv=F,
+                Colv=F,
+                margins=c(5,5),
+                cexRow=1.2,
+                cexCol=1.2,
+                trace=c("none"),
+                na.color="gray60"
+      )
+    })
+  })
+  
+  do.call(tagList, plot_output_list) # needed to display properly.
+  
+  return(plot_output_list)
+}
+
+download_exp_heat_list <- function(max_plots, input_n, input_df, lab_df) {
+  # Insert plot output objects the list
+  i <- input_n
+  plotname <- paste("plot", i, sep="")
+  savename <- paste("save", i, sep="")
+  spec_df <- input_df
+  Gfam_uniq = as.character(unique(spec_df$Gfam))
+  exp_table <- spec_df
+  new_df <- subset(exp_table, Gfam == Gfam_uniq[i])
+  new_mat <- data.matrix(new_df[,3:ncol(new_df)])
+  
+  exp_lab <- lab_df
+  lab_df2 <- subset(exp_lab, Gfam == Gfam_uniq[i])
+  lab_mat <- as.matrix(lab_df2[,3:ncol(lab_df2)])
+
+  rownames(new_mat) <- new_df[,2]
+  mat_title <- Gfam_uniq[i]
+  par(cex.main=0.7)
+  heatmap.2(new_mat,
+            cellnote = lab_mat,
+            notecol="black",
+            density.info="none",
+            main=mat_title,
+            #key = TRUE,
+            #keysize = 1.0,
+            breaks = seq(0, 0.05, by = 0.0005),
+            col=c(colorRampPalette(c("red", "white"))(n=100)),
+            dendrogram="none",
+            margins=c(5,5),
+            cexRow=1.2,
+            cexCol=1.2,
+            trace=c("none"),
+            na.color="gray60"
+  )
+}
+
 
 max_plots <- 10
 
@@ -266,7 +369,7 @@ ui <- navbarPage(title = "Workflow Hub for Automated Metagenomic Exploration",
                        tabPanel("Home",
                                   fluidRow(column(7, 
                                                   fluidRow(column(12, h3("Methods Workflow"),
-                                                                  mainPanel(img(src='WHAM_workflow.png', height = 842, width = 650))))),
+                                                                  mainPanel(img(src='Figure_1.png', height = 842, width = 650))))),
                                            column(5,
                                                   fluidRow(column(12, h3("Resources")),
                                                            mainPanel(textOutput("resource_text1"),
@@ -300,6 +403,8 @@ ui <- navbarPage(title = "Workflow Hub for Automated Metagenomic Exploration",
                                                     value = FALSE)
                                     ),
                                     mainPanel(
+                                      numericInput("filter_level", "Enter Filter Level",
+                                                   min = 0, max = 1, value = 0.9),
                                       dataTableOutput('contents')
                                     )
                                   ))
@@ -340,10 +445,17 @@ ui <- navbarPage(title = "Workflow Hub for Automated Metagenomic Exploration",
                                                       Permitted characters include 
                                                       { . , _ }", width = '35%')),
                                    fluidRow(verbatimTextOutput("ex_delimiter")),
+                                   fluidRow(numericInput("upper_limit",
+                                                         "Taxa upper limit",
+                                                         1, min = 0, max = 1, width = '35%'),
+                                            numericInput("lower_limit",
+                                                         "Taxa lower limit",
+                                                         0, min=0, max=1, width = '35%')),
                                    fluidRow(uiOutput("TaxaDimExp")),
                                    fluidRow(plotlyOutput("species_explore")),
                                    fluidRow(downloadButton("species_download", "Download Plot"), 
-                                            downloadButton("species_legend_download", "Download Legend")),
+                                            downloadButton("species_legend_download", "Download Legend"),
+                                            downloadButton("species_raw_data", "Download Table")),
                                    width = 12)
                                  ),
                         tabPanel("Explore Genes",
@@ -363,13 +475,16 @@ ui <- navbarPage(title = "Workflow Hub for Automated Metagenomic Exploration",
                                                  checkboxInput('xy_switch', label = 'group by Gene Family?')
                                  )),
                                  hr(),
-                                 fluidRow(plotOutput("plot1")),
+                                 fluidRow(column(12,plotOutput("plot1", height = '600px'))),
                                  fluidRow(downloadButton("expression_download", "Download Plot")),
+                                 h5("Pairwise T-test results are performed here if at least 2 groups are selected"),
+                                 fluidRow(column(6,uiOutput("exp_heat"))),
+                                 fluidRow(uiOutput("exp_heat_download")),
                                  fluidRow(column(6, align= "center", tableOutput("exp_table"))),
                                  fluidRow(downloadButton("expression_table_download", "Download Table"))
                                  ),
                         tabPanel("Taxa Search",
-                                 h3("Taxa contribution will appear here based on selections in the Gene Search tab"),
+                                 h5("Taxa contribution will appear here based on selections in the Gene Search tab"),
                                  fluidRow(column(12, uiOutput("spec_plot"))),
                                  fluidPage(uiOutput("search_taxa_download"))
                         ),
@@ -402,7 +517,7 @@ server <- function(input, output, session) {
     message
   })
 
-  url1 <- a("Sample Input File", href="https://github.com/ruggleslab/jukebox/blob/master/wham_v1/wham_input.tsv.zip")
+  url1 <- a("Sample Input File", href="https://github.com/ruggleslab/jukebox/blob/master/wham_v1/sample_input.tsv.zip", target="_blank")
   output$samp_url <- renderUI({
     tagList("", url1)
   })
@@ -412,7 +527,7 @@ server <- function(input, output, session) {
     paste("<br>", "Sample Data was derived from the HMP (Human Microbiome Project Consortium (2012) Structure, function and diversity of the healthy human microbiome. Nature, 486, 207–214.)")
   })
   
-  url2 <- a("HMP HomePage", href="https://hmpdacc.org/hmp/")
+  url2 <- a("HMP HomePage", href="https://hmpdacc.org/hmp/", target="_blank")
   output$hmp_url <- renderUI({
     tagList("", url2)
   })
@@ -423,7 +538,7 @@ server <- function(input, output, session) {
           available on the Ruggles Lab Github.")
   })
   
-  url3 <- a("HUMANn2 File Converter", href="https://github.com/ruggleslab/jukebox/tree/master/wham_v1/file_conversion_scripts")
+  url3 <- a("HUMANn2 File Converter", href="https://github.com/ruggleslab/jukebox/tree/master/wham_v1/file_conversion_scripts", target="_blank")
   output$humann2wham_url <- renderUI({
     tagList("", url3)
   })
@@ -433,7 +548,7 @@ server <- function(input, output, session) {
     message <- c("WHAM! is an open-source project developed in the Ruggles Lab at NYU Langone Medical Center.")
   })
   
-  url4 <- a("Ruggles Lab HomePage", href="http://www.ruggleslab.org/home.html")
+  url4 <- a("Ruggles Lab HomePage", href="http://www.ruggleslab.org/home.html", target="_blank")
   output$ruggles_url <- renderUI({
     tagList("", url4)
   })
@@ -442,7 +557,7 @@ server <- function(input, output, session) {
     paste("<br>", "Source Code can be found on the Ruggles Lab Github")
   })
   
-  url5 <- a("Ruggles Lab Github", href="https://github.com/ruggleslab/jukebox")
+  url5 <- a("Ruggles Lab Github", href="https://github.com/ruggleslab/jukebox", target="_blank")
   output$github_url <- renderUI({
     tagList("", url5)
   })
@@ -455,22 +570,32 @@ server <- function(input, output, session) {
   
   full_file <- reactive({
     if (input$testme) {
-      full_file <- fread("univ_input2.tsv", header=TRUE, sep=input$sep)
+      full_file <- fread("sample_input.tsv", header=TRUE, sep=input$sep)
     }
     else {
       inFile <- input$file1
       if (is.null(inFile)) {
         return(NULL)}
-      full_file <- fread(inFile$datapath, header=TRUE, sep=input$sep)
+      full_file <- try(
+        {fread(inFile$datapath, header=TRUE, sep=input$sep)})
+    
       correct_cols <- c("Acc", "Gene_Family", "Species")
+      validate(
+        need(class(full_file)!="try-error", paste0("The input file provided is not an appropriate format. Please view the sample input file provided in the Home Tab."))
+      )
       validate(
         need(colnames(full_file)[1:3]==correct_cols, paste0("The input file provided is not an appropriate format. Please view the sample input file provided in the Home Tab."))
       )
     }
     nums <- data.matrix(full_file[,4:ncol(full_file)])
     rownames(nums) <- rownames(full_file)
-    keep_rows = rownames((nums[apply(nums==0,1,sum)<=0.9*ncol(nums),]))
-    full_file <- full_file[as.numeric(keep_rows),]
+    if (input$filter_level == 0){
+      full_file <- full_file
+    }
+    else{
+      keep_rows = rownames((nums[apply(nums==0,1,sum)<=input$filter_level*ncol(nums),]))
+      full_file <- full_file[as.numeric(keep_rows),]
+    }
     full_file <- subset(full_file, Gene_Family != "NO_NAME")
     full_file
   })
@@ -735,10 +860,10 @@ server <- function(input, output, session) {
     samp=strtoi(sample_num)
     isamp = rep(samp,row)
     g_data = data.frame(datas, Gfam, isamp, group_titles2)
-    colnames(g_data) = c("Relative_Expression", "Gene_Family", "Sample_num", "Group")
+    colnames(g_data) = c("Relative_Abundance", "Gene_Family", "Sample_num", "Group")
     #g_data without zeros
     
-    g_data2 = subset(g_data, Relative_Expression > 0, select=c(Relative_Expression,Gene_Family,Sample_num, Group))
+    g_data2 = subset(g_data, Relative_Abundance > 0, select=c(Relative_Abundance,Gene_Family,Sample_num, Group))
     
     if (length(input$excluder)>0){
       exclude_list = input$excluder
@@ -759,10 +884,11 @@ server <- function(input, output, session) {
     }
     
     
-    exp_plot = ggplot(g_data2, aes(x = Group, y = Relative_Expression, fill = Gene_Family)) +
+    exp_plot = ggplot(g_data2, aes(x = Group, y = Relative_Abundance, fill = Gene_Family)) +
       #geom_bar(position = 'fill', stat = 'identity') +
       stat_summary(fun.y = "mean", geom = "bar", position = "fill") +
       scale_fill_manual(values = col_vector_edit) +
+      ylab("Relative Abundance") +
       theme(legend.position = "none")
   })
   
@@ -853,24 +979,47 @@ server <- function(input, output, session) {
   expression_plot <- reactive({
     g_data2 = data.frame(exp_plot())
     class(g_data2$Exp) = "numeric"
-    gmax = max(g_data2$Exp)
-    gmin = min(g_data2$Exp)
+    #gmax = max(g_data2$Exp)
+    #gmin = min(g_data2$Exp)
     
-    #print(g_data2$Exp)
     
-    med = median(gmax,gmin)
-    break_points = seq(gmin,gmax,1e-4)
+    #med = median(gmax,gmin)
+    #break_points = seq(gmin,gmax,1e-4)
     g_data2$Gfam2 <- gsub(" ", "", g_data2$Gfam)
-    g_data2$Gfam2 <- str_trunc(g_data2$Gfam2, 35, "center")
-
+    g_data2$Gfam2 <- str_trunc(g_data2$Gfam2, 30, "center")
+    
+    g_data2$group_gfam <- paste(g_data2$group, g_data2$Gfam2, sep=":")
+    
+    combos <- unique(g_data2$group_gfam)
+    g_data_new <- data.frame()
+    for (i in 1:length(combos)){
+      checker <- subset(g_data2, group_gfam == combos[i])
+      if (sum(checker$Exp) > 0){
+        new_df <- checker
+      } else {
+        new_df <- checker[1,]
+        new_df$Exp = 1000
+      }
+      g_data_new <- rbind(g_data_new, new_df)
+    }
+    colnames(g_data_new) = colnames(g_data2)
+    
+    g_data_new <- subset(g_data_new, Exp > 0)
+    glogs <- g_data_new$Exp[g_data_new$Exp < 1000]
+    gmax <- max(glogs)
+    gmin <- min(glogs)
+    #print(gmin)
+    #print(gmax)
+    
     if (input$xy_switch){
-      plot_exp = ggplot(g_data2, aes(x = Gfam2, y = Exp, fill = groups)) +
+      plot_exp = ggplot(g_data_new, aes(x = Gfam2, y = Exp, fill = groups)) +
         geom_boxplot(outlier.shape=3) +
-        ggtitle("Logarthimic Gene Expression") +
-        scale_fill_manual(values = col_vector) +
+        ggtitle("Logarthimic Gene Abundance") +
+        #scale_fill_manual(values = col_vector) +
+        coord_cartesian(ylim = c(gmin, gmax)) +
         scale_y_log10() +
         xlab("Gene Family") +
-        ylab("Log Relative Expression") +
+        ylab("Log Relative Abundance") +
         guides(color=FALSE, fill = guide_legend(title = "Group")) +
         theme(#axis.text.x = element_blank(), 
           #plot.margin = unit(c(.1, .1, .1, .1), "cm"),
@@ -878,20 +1027,22 @@ server <- function(input, output, session) {
           axis.title.y = element_text(size = 22),
           axis.title.x = element_text(size = 18),
           axis.text.y = element_text(size = 22),
-          axis.text.x = element_text(size = 15, angle = 15, hjust=1),
+          axis.text.x = element_text(size = 18, 
+                                     angle = 20+5*(length(unique(g_data_new$Gfam2))), 
+                                     hjust=1),
           legend.title = element_text(size = 22),
           legend.text = element_text(size = 18))
       plot_exp
     } else {
-      plot_exp = ggplot(g_data2, aes(x = groups, y = Exp, fill = Gfam2)) +
+      plot_exp = ggplot(g_data_new, aes(x = groups, y = Exp, fill = Gfam2)) +
         geom_boxplot(outlier.shape=3) +
-        ggtitle("Logarthimic Gene Expression Across Relevant Samples") +
-        scale_fill_manual(values = col_vector) +
+        ggtitle("Logarthimic Gene Abundance") +
+        #scale_fill_manual(values = col_vector) +
         #scale_colour_brewer(palette="rainbow") +
-        #scale_y_log10(limits = c(gmin,gmax)) +
+        coord_cartesian(ylim = c(gmin, gmax)) +
         scale_y_log10() +
         xlab("Groups") +
-        ylab("Log Relative Expression") +
+        ylab("Log Relative Abundance") +
         guides(color=FALSE, fill = guide_legend(title = "Gene Family")) +
         theme(#axis.text.x = element_blank(), 
           plot.margin = unit(c(1, 1, 1, 1), "cm"),
@@ -911,10 +1062,10 @@ server <- function(input, output, session) {
   })
   
   output$expression_download <- downloadHandler(
-    filename = function() { paste("gene_family_expression", '.png', sep='') },
+    filename = function() { paste("gene_family_abundance", '.png', sep='') },
     content = function(file) {
       ggsave(file, plot = expression_plot(), device = 'png', 
-             width = 60, height = 24, units = "cm")
+             width = 35, height = 20, units = "cm")
     }
   )
   
@@ -932,22 +1083,55 @@ server <- function(input, output, session) {
         acc_split[c("Exp")][is.na(acc_split[c("Exp")])] <- 0
         hi = pairwise.t.test(acc_split$Exp, acc_split$groups, p.adjust = 'BH')
         hiP <- hi$p.value
-        if (length(group_uniq > 3)) {
-          cutoff <- length(group_uniq) -1
-          hiP <- hiP[1:cutoff-1,-1]
-          hiP[upper.tri(hiP)] = t(hiP)[upper.tri(hiP)]
-          hiP <- suppressWarnings(cbind(hi$p.value[cutoff,], hiP))
-          hiP <- rbind(hiP, hi$p.value[cutoff,])
-          rownames(hiP) <- rownames(hi$p.value)
-          colnames(hiP) <- colnames(hi$p.value)
-          hiP <- data.frame(hiP)
-        }
+        nas <- rep(NA, length(group_uniq))
+        hiP <- rbind(nas[-1], hiP)
+        hiP <- cbind(hiP, nas)
+        hiP[upper.tri(hiP)] = t(hiP)[upper.tri(hiP)]
+        hiP <- round(hiP, 4)
+        hiP[hiP < 0.0001] <- "<0.0001"
+        hiP <- data.frame(hiP)
         hio = rbind.fill(hio, hiP)
       }
-      hi3 = data.frame(rep(Gfam_uniq, each = length(group_uniq)-1))
+      hi3 = data.frame(rep(Gfam_uniq, each = length(group_uniq)))
       colnames(hi3) = "Gfam"
-      hi3$group_comparisons = c(rep(group_uniq[-1], length(Gfam_uniq)))
+      hi3$group_comparisons = c(rep(group_uniq, length(Gfam_uniq)))
       hi3 = cbind.fill(hi3, hio)
+      colnames(hi3) <- c("Gfam", "Group Comparison", group_uniq)
+    }
+    else if (length(group_uniq)==1){
+      hi3 <- data.frame(Seletion=1:length(Gfam_uniq), Gene_Family=Gfam_uniq)
+      hi3
+    }
+    hi3
+  })
+  
+  expression_table_orig <- reactive({
+    #req(exp_plot())
+    g_data2 = data.frame(exp_plot())
+    g_data2 = g_data2[order(g_data2$groups),]
+    
+    Gfam_uniq = unique(g_data2$Gfam)
+    group_uniq = as.character(unique(g_data2$groups))
+    if (length(group_uniq) > 1) {
+      hio=c()
+      for (i in Gfam_uniq){
+        acc_split = g_data2[grep(i, g_data2$Gfam),]
+        acc_split[c("Exp")][is.na(acc_split[c("Exp")])] <- 0
+        hi = pairwise.t.test(acc_split$Exp, acc_split$groups, p.adjust = 'BH')
+        hiP <- hi$p.value
+        nas <- rep(NA, length(group_uniq))
+        hiP <- rbind(nas[-1], hiP)
+        hiP <- cbind(hiP, nas)
+        hiP[upper.tri(hiP)] = t(hiP)[upper.tri(hiP)]
+        hiP <- round(hiP, 5)
+        hiP <- data.frame(hiP)
+        hio = rbind.fill(hio, hiP)
+      }
+      hi3 = data.frame(rep(Gfam_uniq, each = length(group_uniq)))
+      colnames(hi3) = "Gfam"
+      hi3$group_comparisons = c(rep(group_uniq, length(Gfam_uniq)))
+      hi3 = cbind.fill(hi3, hio)
+      colnames(hi3) <- c("Gfam", "Group Comparison", group_uniq)
     }
     else if (length(group_uniq)==1){
       hi3 <- data.frame(Seletion=1:length(Gfam_uniq), Gene_Family=Gfam_uniq)
@@ -958,16 +1142,74 @@ server <- function(input, output, session) {
   
   output$exp_table = renderTable({
     expression_table()
-  }, digits = 5)
+  })
   
   output$expression_table_download <- downloadHandler(
-    filename = function() { paste("gene_family_expression_table", '.txt', sep='') },
+    filename = function() { paste("gene_family_abundance_table", '.txt', sep='') },
     content = function(file) {
       exp = expression_table()
       exp2 = data.frame(exp)
       write.table(exp2, file, row.names = FALSE, sep = '\t', quote = FALSE)
     }
   )
+  
+  output$exp_heat <- renderUI({
+    g_data2 = data.frame(exp_plot())
+    g_data2 = g_data2[order(g_data2$groups),]
+    
+    Gfam_uniq = unique(g_data2$Gfam)
+    group_uniq = as.character(unique(g_data2$groups))
+    exp_table <- expression_table_orig()
+    exp_labs <- expression_table()
+    if (length(group_uniq) > 1) {
+      get_exp_heat_list(max_plots, length(Gfam_uniq), exp_table, exp_labs)
+    }
+  })
+  
+  output$exp_heat_download <- renderUI({
+    g_data2 = data.frame(exp_plot())
+    g_data2 = g_data2[order(g_data2$groups),]
+    
+    Gfam_uniq = unique(g_data2$Gfam)
+    group_uniq = as.character(unique(g_data2$groups))
+    if (length(group_uniq) > 1) {
+      lapply(1:length(Gfam_uniq), function(i) {
+        display_name = Gfam_uniq
+        downloadButton(paste0("downloadExp", i), paste("Download", display_name[i], sep=" "))
+      })
+    }
+  })
+  
+  observe({
+    g_data2 = data.frame(exp_plot())
+    g_data2 = g_data2[order(g_data2$groups),]
+    
+    Gfam_uniq = unique(g_data2$Gfam)
+    group_uniq = as.character(unique(g_data2$groups))
+  
+    
+    lapply(1:length(Gfam_uniq), function(i) {
+      if (nchar(as.character(Gfam_uniq[i])) > 30){
+        fixed_width <- 0.35*nchar(as.character(Gfam_uniq[i]))
+      } else {fixed_width <- 15}
+      
+      if (nchar(as.character(Gfam_uniq[i])) > 30){
+        fixed_height <- 0.35*nchar(as.character(Gfam_uniq[i]))
+      } else {fixed_height <- 15}
+      
+      output[[paste0("downloadExp", i)]] <- downloadHandler(
+        filename = function() { paste(Gfam_uniq[i], "_p_value_heat", '.png', sep='') },
+        content = function(file) {
+          png(file, width = fixed_width, 
+              height = fixed_height, units ='cm', res = 300)
+          exp_table <- expression_table_orig()
+          exp_labs <- expression_table()
+          download_exp_heat_list(max_plots, i, exp_table, exp_labs)
+          dev.off()
+        }
+      )
+    })
+  })
   
   gfam_full <- reactive({
     if (input$testme){
@@ -1055,7 +1297,7 @@ server <- function(input, output, session) {
     
     spec_g_data = data.frame(spec_datas, 
                              spec_isamp, group_titles2, spec_spec)
-    colnames(spec_g_data) = c("Relative_Expression", "Sample_num", "Group", "Species")
+    colnames(spec_g_data) = c("Relative_Abundance", "Sample_num", "Group", "Species")
     
     taxa_sub_pattern = paste0("\\", input$taxaSep, ".*")
     spec_g_data$Genus = unlist(gsub(taxa_sub_pattern,"",as.character(spec_g_data$Species))) 
@@ -1069,9 +1311,22 @@ server <- function(input, output, session) {
     spec_g_data <- spec_genus_data()
     uniq_genus_num = length(unique(spec_g_data$Genus))
     
-    exp_plot = ggplot(spec_g_data, aes(x = Group, y = Relative_Expression, fill = Genus)) +
+    spec_g_data$Genus <- reorder(spec_g_data$Genus, -spec_g_data$Relative_Abundance)
+    
+    spec_g_data2 <- aggregate(spec_g_data$Relative_Abundance, list(spec_g_data$Genus), sum)
+    
+    summer <- sum(spec_g_data2[,2])
+    spec_g_data2$prop <- spec_g_data2[,2]/summer
+    spec_g_data3 <- subset(spec_g_data2, prop < input$upper_limit)
+    spec_g_data4 <- subset(spec_g_data3, prop > input$lower_limit)
+    
+    keep_taxa <- as.character(unlist(spec_g_data4[,1]))
+    spec_g_data_filt <- subset(spec_g_data, Genus %in% keep_taxa)
+    
+    exp_plot = ggplot(spec_g_data_filt, aes(x = Group, y = Relative_Abundance, fill = Genus)) +
       stat_summary(fun.y = "mean", geom = "bar", position = "fill")+
-      scale_fill_manual(values = sample(col_vector, uniq_genus_num, TRUE))
+      scale_fill_manual(values = randomColor(uniq_genus_num)) +
+      ylab("Relative Abundance")
     exp_plot
   })
   
@@ -1102,10 +1357,21 @@ server <- function(input, output, session) {
     filename = function() { paste("taxa_explore_legend", '.png', sep='') },
     content = function(file) {
       genera <- length(unique(spec_genus_data()$Genus))
-      png(file, width = 45, height = 0.25*genera, units ='cm', res = 300)
+      png(file, width = 40, height = 0.25*genera, units ='cm', res = 300)
       par(mfrow = c(1,1))
       grid.draw(taxa_explore_legend())
       dev.off()
+    }
+  )
+  
+  output$genus_raw_data <- downloadHandler(
+    filename = function() { paste("taxa_explore_raw_data", '.txt', sep='') },
+    content = function(file) {
+      spec_g_data <- spec_genus_data()
+      uniq_spec_num = length(unique(spec_g_data$Genus))
+      
+      spec_g_data$Genus <- reorder(spec_g_data$Genus, -spec_g_data$Relative_Abundance)
+      write.table(spec_g_data, file, quote=F, sep='\t', row.names = F)
     }
   )
   
@@ -1164,7 +1430,7 @@ server <- function(input, output, session) {
     
     spec_g_data = data.frame(spec_datas, 
                              spec_isamp, group_titles2, spec_spec)
-    colnames(spec_g_data) = c("Relative_Expression", "Sample_num", "Group", "Species")
+    colnames(spec_g_data) = c("Relative_Abundance", "Sample_num", "Group", "Species")
     
     #print(spec_g_data$Species)
     spec_g_data$Genus = unlist(gsub("\\..*","",as.character(spec_g_data$Species)))
@@ -1185,9 +1451,25 @@ server <- function(input, output, session) {
     spec_g_data <- spec_species_data()
     uniq_spec_num = length(unique(spec_g_data$Species))
     
-    exp_plot = ggplot(spec_g_data, aes(x = Group, y = Relative_Expression, fill = Species)) +
+    spec_g_data$Species <- reorder(spec_g_data$Species, -spec_g_data$Relative_Abundance)
+    
+    spec_g_data2 <- aggregate(spec_g_data$Relative_Abundance, list(spec_g_data$Species), sum)
+    
+    summer <- sum(spec_g_data2[,2])
+    spec_g_data2$prop <- spec_g_data2[,2]/summer
+    spec_g_data3 <- subset(spec_g_data2, prop < input$upper_limit)
+    spec_g_data4 <- subset(spec_g_data3, prop > input$lower_limit)
+    
+    keep_taxa <- as.character(unlist(spec_g_data4[,1]))
+    spec_g_data_filt <- subset(spec_g_data, Species %in% keep_taxa)
+
+    exp_plot = ggplot(spec_g_data_filt, aes(x = Group, 
+                                       y = Relative_Abundance, 
+                                       fill = Species)) +
       stat_summary(fun.y = "mean", geom = "bar", position = "fill")+
-      scale_fill_manual(values = sample(col_vector, uniq_spec_num, TRUE))
+      scale_fill_manual(values = randomColor(uniq_spec_num)) +
+      ylab("Relative Abundance")
+      #scale_fill_manual(values = sample(col_vector, uniq_spec_num, TRUE))
     exp_plot
   })
   
@@ -1225,11 +1507,23 @@ server <- function(input, output, session) {
     }
   )
   
+  output$species_raw_data <- downloadHandler(
+    filename = function() { paste("species_explore_raw_data", '.txt', sep='') },
+    content = function(file) {
+      spec_g_data <- spec_species_data()
+      uniq_spec_num = length(unique(spec_g_data$Species))
+      
+      spec_g_data$Species <- reorder(spec_g_data$Species, -spec_g_data$Relative_Abundance)
+      write.table(spec_g_data, file, quote=F, sep='\t', row.names = F)
+    }
+  )
+  
   output$TaxaDimExp <- renderUI({
     if (input$taxaDims > 1){
       mainPanel(fluidRow(plotlyOutput("taxa_explore")),
                 fluidRow(downloadButton("taxa_download", "Download Plot"),
-                         downloadButton("taxa_legend_download", "Download Legend")),
+                         downloadButton("taxa_legend_download", "Download Legend"),
+                         downloadButton("genus_raw_data", "Download Table")),
                 width = 12)
     }
   })
@@ -1243,7 +1537,7 @@ server <- function(input, output, session) {
   
   spec <- reactive({
     validate(
-      need(input$acc_list, 'Please Select at least one Gene Family in the Expression Tab')
+      need(input$acc_list, 'Please Select at least one Gene Family in the Gene Search Tab')
     )
 
     spec_list = input$acc_list
@@ -1312,7 +1606,8 @@ server <- function(input, output, session) {
     col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
     col_vector[10] = "blue2" ##manually change color here if you don't like what you see in the figs! #
     
-    cols <- sample(col_vector, most_specs, replace=TRUE)
+    #cols <- sample(col_vector, most_specs, replace=TRUE)
+    cols <- randomColor(most_specs)
     cols
   })
   
@@ -1349,7 +1644,7 @@ server <- function(input, output, session) {
           spec <- spec()
           spec_curr <- subset(spec, spec$Gfam==input$acc_list[i])
           specs_nums <- length(unique(spec_curr$Species))
-          png(file, width = 25+0.3*specs_nums, height = 25, units ='cm', res = 300)
+          png(file, width = 25+0.3*specs_nums, height = 30, units ='cm', res = 300)
           plotter<-download_spec_plot_list(max_plots, 
                                   1,
                                   subset(spec, spec$Gfam==input$acc_list[i]),
@@ -1692,7 +1987,7 @@ server <- function(input, output, session) {
   })
   
   output$corr_table_download <- downloadHandler(
-    filename = function() { paste("gene_family_expression_table", '.txt', sep='') },
+    filename = function() { paste("gene_family_abundance_table", '.txt', sep='') },
     content = function(file) {
       corr_tab = corr_label_table()
       corr_tab2 = data.frame(corr_tab)
