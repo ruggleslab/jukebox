@@ -40,7 +40,7 @@ for line in f_in.readlines():
         samp_list = header.split('\t')
         sample_num = len(samp_list)-1
     if "|" in line:
-    	things = line.split('\t')
+    	  things = line.split('\t')
         heading = things[0]
         expr = things[1:]
         expr_list = ','.join(expr)
