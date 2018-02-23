@@ -1201,8 +1201,6 @@ server <- function(input, output, session) {
     heyo_side = data.frame(t(heyo_small))
     colnames(heyo_side) = rownames(heyo_small)
     
-    print(heyo$Gene_Family)
-    
     library(psych)
     hah2 = corr.test(heyo_side, method = "spearman")
     
