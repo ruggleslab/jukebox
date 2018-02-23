@@ -319,7 +319,6 @@ server <- function(input, output, session) {
       need(length(unlist(grouped_samps()))>0, 'Select groups!')
     )
     group_list = c(unlist(grouped_samps()))
-    library(base)
     duplicates = c(duplicated(group_list))
     if ('TRUE' %in% duplicates) {
       message = c("Warning: A sample has been assigned to more than one group!")
@@ -1270,6 +1269,41 @@ server <- function(input, output, session) {
     actual_corr_plot()
   })
   
+  actual_corr_names <- reactive({
+    if (input$testme) {
+      validate(
+        need(length(group_dims())==4, "Please visit the group tab to verify group assignment")
+      )
+    }
+    else{
+      validate(
+        need(input$file1, "Please provide a file in the Upload Tab") %then%
+          need(unlist(grouped_samps()), "Please select samples in the Group Tab"))
+    }
+    
+    validate(
+      need(length(input$sig_select) > 1, 'Select at least two Gene Families!')
+    )
+    corr_list = input$sig_select
+    
+    gfam_DF1 = acc_full()
+    col_num = ncol(gfam_DF1)
+    row_num = nrow(gfam_DF1)
+    reorder_samps = gfam_DF1[,-1]
+    reorder_samps = reorder_samps[,c(unlist(grouped_samps()))]
+    header_DF = gfam_DF1[,1]
+    
+    gfam_DF = cbind(header_DF, reorder_samps)
+    samp_paths = gfam_DF
+    samp_paths$Gene_Family = paste(" ", samp_paths$Gene_Family, " ", sep="")
+    
+    
+    heyo = samp_paths[grep(paste(corr_list, collapse = '|'), samp_paths$Gene_Family), ]
+    actual_corr_names <- gsub(" ", "", heyo$Gene_Family)
+    actual_corr_names
+  })
+  
+  
   # Generate list of correlation matrices for each Group
   group_corr_plist <- reactive({
     if (input$testme) {}
@@ -1462,10 +1496,11 @@ server <- function(input, output, session) {
       need(length(input$sig_select) > 1, 'Select at least two Gene Families!')
     )
     
-    Gene_Families = (input$sig_select)
+    Gene_Families = actual_corr_names()
     nums = length(Gene_Families)
     Label = paste(1:nums)
     Label_Matrix = data.frame(Gene_Families, Label)
+    #print(Label_Matrix)
     Label_Matrix
   })
   
