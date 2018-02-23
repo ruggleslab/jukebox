@@ -1201,9 +1201,10 @@ server <- function(input, output, session) {
     heyo_side = data.frame(t(heyo_small))
     colnames(heyo_side) = rownames(heyo_small)
     
+    print(heyo$Gene_Family)
+    
     library(psych)
     hah2 = corr.test(heyo_side, method = "spearman")
-    
     
     corr_mat = as.matrix(hah2$r)
     rownames(corr_mat) = paste(1:nrow(corr_mat))
@@ -1299,7 +1300,7 @@ server <- function(input, output, session) {
     
     
     heyo = samp_paths[grep(paste(corr_list, collapse = '|'), samp_paths$Gene_Family), ]
-    actual_corr_names <- gsub(" ", "", heyo$Gene_Family)
+    actual_corr_names <- heyo$Gene_Family
     actual_corr_names
   })
   
