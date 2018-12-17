@@ -47,31 +47,31 @@ for line in f_in.readlines():
         expr_vals1 = expr_list.replace(',', '\t')
         expr_vals = expr_vals1.replace('\n', '')
         expr_vals_print = expr_vals[0:len(expr_vals)]
-	ex=str.split(expr_vals, '\t')
-	ex_float=[]
-	for item in ex:
-		aa=float(item)
-		ex_float.append(aa)
-	if sum(item==0 for item in ex_float) > 1*len(ex_float):
-		next
-	else:
-        	if "NO_NAME" not in line:
-          		if "unclassified" not in line:
-              			if "unknown" not in line:
-                  			R=re.search('(.*)\:(.*)\|(.*)', heading)
-                  			acc=R.group(1)
-                  			gfam=R.group(2)
-                  			taxa=R.group(3)
-                  			print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
-          		else:
-              			if "unknown" not in line:
-                  			things = line.split('\t')
-                  			heading = things[0]
-                  			R=re.search('(.*)\:(.*)\|(.*)', heading)
-                  			acc=R.group(1)
-                  			gfam=R.group(2)
-                  			taxa=R.group(3)
-                  			print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
-            				#gfam_list.append(gfam)
+        ex=str.split(expr_vals, '\t')
+        ex_float=[]
+        for item in ex:
+	        aa=float(item)
+	        ex_float.append(aa)
+        if sum(item==0 for item in ex_float) > 1*len(ex_float):
+	        next
+        else:
+                if "NO_NAME" not in line:
+          	        if "unclassified" not in line:
+              		        if "unknown" not in line:
+                  		        R=re.search('(.*)\:(.*)\|(.*)', heading)
+                  		        acc=R.group(1)
+                  		        gfam=R.group(2)
+                  		        taxa=R.group(3)
+                  		        print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
+          	        else:
+              		        if "unknown" not in line:
+                  		        things = line.split('\t')
+                  		        heading = things[0]
+                  		        R=re.search('(.*)\:(.*)\|(.*)', heading)
+                  		        acc=R.group(1)
+                  		        gfam=R.group(2)
+                  		        taxa=R.group(3)
+                  		        print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
+            			        #gfam_list.append(gfam)
 
 f_in.close()
