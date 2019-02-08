@@ -1459,12 +1459,14 @@ server <- function(input, output, session) {
     select_gfam <- event.data$y
     
     full_full <- full_file_feature()
+    col_keep <- colnames(full_full[,4:ncol(full_full)])
     full_select <- data.frame(subset(full_full, Feature %in% select_gfam))
+    colnames(full_select) <- c("Acc", "Feature", "Taxa", col_keep)
 
 
     go_nums <- full_select[,4:ncol(full_select)]
     go_reorder <- go_nums[,unlist(grouped_samps())]
-    
+
     RA <- unlist(go_reorder)
     
     samp_order <- factor(colnames(go_reorder), 
@@ -1966,8 +1968,10 @@ server <- function(input, output, session) {
     select_gfam <- event.data$y
     
     full_full <- full_file_feature()
+    col_keep <- colnames(full_full[,4:ncol(full_full)])
     full_select <- data.frame(subset(full_full, Feature %in% select_gfam))
-    
+    colnames(full_select) <- c("Acc", "Feature", "Taxa", col_keep)
+
     validate(
       need(input$input_type == "Biobakery", "Specific Taxa Assignments not availble for EBI inputs")
     )
@@ -2725,7 +2729,7 @@ server <- function(input, output, session) {
       fluidRow(
         column(8, fluidPage(
           fluidRow(
-            column(4, sliderInput("taxa_pval_up", "Adjusted p Value", min = 0, max = 0.1,
+            column(4, sliderInput("taxa_pval_up", "Adjusted p Value", min = 0, max = 0.5,
                                   step = 0.001, value = 0.05)),
             column(2, numericInput("taxa_pval_num", " ", min = 0, max = 0.1, 
                                    step = 0.001, value = 0.05)),
