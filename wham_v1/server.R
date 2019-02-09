@@ -59,7 +59,7 @@ server <- function(input, output, session) {
   
   output$citation <- renderText({
     paste("<br>", "For additional information of using WHAM! or to cite WHAM! in your work, please refer to the following paper:",
-          "*Citation Info*")
+          "https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-018-4870-z")
   })
   
   observe({
@@ -110,11 +110,23 @@ server <- function(input, output, session) {
         nums <- data.matrix(full_file[,start_col:ncol(full_file)])
         rownames(nums) <- rownames(full_file)
         
+        cols <- colnames(nums)
+        checker <- apply(nums, 1, is.integer)
+        if (!all(checker==T)){
+          num_check <- mean(colSums(nums))
+          if(num_check < 1000000){
+            nums <- nums*1000000
+            nums <- round(nums,0)
+            nums <- t(apply(nums, 1, as.integer))
+            colnames(nums) <- cols
+            m_count <<- c("Input not a count matrix, values converted to integers and scaled to 1million where applicable")
+          }
+        } else {m_count <<- c("")}
         checker <- apply(nums, 1, is.integer)
         validate(
           need(all(checker==T), "It appears the provided input is not a count matrix!")
         )
-        
+        full_file <- cbind(full_file[,1:3], nums)
         full_file <- subset(full_file, Feature != "NO_NAME")
         full_file$Feature <- gsub("[^[:alnum:]']", "_", full_file$Feature)
         full_file_feature <- full_file
@@ -418,7 +430,19 @@ server <- function(input, output, session) {
       m2 <- paste0("Original number of unique features: ", old)
       m3 <- paste0("Number of unique features after filtering: ", new)
       
+      
       HTML(paste('<br/>', m2, m3, '<br/>', sep = '<br/>'))
+    })
+  })
+  
+  observeEvent(nrow(full_file_feature()>0), {
+    output$filter_message3 <- renderUI({
+      
+      validate(
+        need(nrow(full_file_feature()) > 0, "")
+      )
+      
+      HTML(paste(m_count, sep = '<br/>'))
     })
   })
   

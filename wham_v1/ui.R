@@ -45,6 +45,9 @@ ui <- navbarPage(title = "Workflow Hub for Automated Metagenomic Exploration",
                                       fluidRow(column(7, uiOutput("filter_message2"))),
                                       tags$head(tags$style(
                                         "#filter_message2{color: #df691a; font-size: 18px}")),
+                                      fluidRow(column(7, uiOutput("filter_message3"))),
+                                      tags$head(tags$style(
+                                        "#filter_message3{color: red; font-size: 18px}")),
                                       uiOutput("preview_shower")
                                     )
                                   ))
