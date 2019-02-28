@@ -89,6 +89,7 @@ server <- function(input, output, session) {
       #full_file <- fread("sample_input2.tsv", header=TRUE, sep=input$sep)
       full_file_feature <- fread("HMP_count_est_go_names_wham.tsv", header=TRUE, sep='\t')
       #full_file_feature <- fread("antibiotic_count_est_u90_wham.tsv", header=TRUE, sep='\t') ##temp test
+      m_count <<- c("")
     }
     else {
       if (input$input_type == "Biobakery"){
@@ -114,13 +115,17 @@ server <- function(input, output, session) {
         checker <- apply(nums, 1, is.integer)
         if (!all(checker==T)){
           num_check <- mean(colSums(nums))
-          if(num_check < 1000000){
-            nums <- nums*1000000
+          if(num_check < 100000){
+            nums <- nums*100000
             nums <- round(nums,0)
             nums <- t(apply(nums, 1, as.integer))
             colnames(nums) <- cols
             m_count <<- c("Input not a count matrix, values converted to integers and scaled to 1million where applicable")
-          }
+          } else {
+            nums <- round(nums,0)
+            nums <- t(apply(nums, 1, as.integer))
+            colnames(nums) <- cols
+            }
         } else {m_count <<- c("")}
         checker <- apply(nums, 1, is.integer)
         validate(
