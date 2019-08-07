@@ -50,28 +50,28 @@ for line in f_in.readlines():
         ex=str.split(expr_vals, '\t')
         ex_float=[]
         for item in ex:
-	        aa=float(item)
-	        ex_float.append(aa)
+          aa=float(item)
+          ex_float.append(aa)
         if sum(item==0 for item in ex_float) > 1*len(ex_float):
-	        next
+          next
         else:
                 if "NO_NAME" not in line and "UNINTEGRATED" not in line:
-          	        if "unclassified" not in line:
-              		        if "unknown" not in line:
-                  		        R=re.search('(.*)\:(.*)\|(.*)', heading)
-                  		        acc=R.group(1)
-                  		        gfam=R.group(2)
-                  		        taxa=R.group(3)
-                  		        print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
-          	        else:
-              		        if "unknown" not in line:
-                  		        things = line.split('\t')
-                  		        heading = things[0]
-                  		        R=re.search('(.*)\:(.*)\|(.*)', heading)
-                  		        acc=R.group(1)
-                  		        gfam=R.group(2)
-                  		        taxa=R.group(3)
-                  		        print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
-            			        #gfam_list.append(gfam)
+                    if "unclassified" not in line:
+                          if "unknown" not in line:
+                              R=re.search('(.*)\:(.*)\|(.*)', heading)
+                              acc=R.group(1)
+                              gfam=R.group(2)
+                              taxa=R.group(3)
+                              print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
+                    else:
+                          if "unknown" not in line:
+                              things = line.split('\t')
+                              heading = things[0]
+                              R=re.search('(.*)\:(.*)\|(.*)', heading)
+                              acc=R.group(1)
+                              gfam=R.group(2)
+                              taxa=R.group(3)
+                              print(acc + '\t' + gfam + '\t' + taxa + '\t' + expr_vals_print)
+                          #gfam_list.append(gfam)
 
 f_in.close()
