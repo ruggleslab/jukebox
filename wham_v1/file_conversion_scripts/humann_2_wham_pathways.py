@@ -55,7 +55,11 @@ for line in f_in.readlines():
         if sum(item==0 for item in ex_float) > 1*len(ex_float):
           next
         else:
+<<<<<<< HEAD
                 if "NO_NAME" not in line and "UNINTEGRATED" not in line and "UNGROUPED" not in line:
+=======
+                if "NO_NAME" not in line and "UNINTEGRATED" not in line:
+>>>>>>> 2f20946417dbcdb4b816103e2334c3064fc33005
                     if "unclassified" not in line:
                           if "unknown" not in line:
                               R=re.search('(.*)\:(.*)\|(.*)', heading)
