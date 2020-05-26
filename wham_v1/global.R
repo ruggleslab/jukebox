@@ -12,6 +12,7 @@ library(viridis)
 library(matrixStats)
 library(webshot)
 library(ALDEx2)
+library(DT)
 
 
 

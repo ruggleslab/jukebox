@@ -87,7 +87,7 @@ server <- function(input, output, session) {
     if (input$testme) {
       start_col = 4
       #full_file <- fread("sample_input2.tsv", header=TRUE, sep=input$sep)
-      full_file_feature <- fread("HMP_count_est_go_names_wham.tsv", header=TRUE, sep='\t')
+      full_file_feature <- fread("sample_input.tsv", header=TRUE, sep='\t')
       #full_file_feature <- fread("antibiotic_count_est_u90_wham.tsv", header=TRUE, sep='\t') ##temp test
       m_count <<- c("")
     }
@@ -195,7 +195,7 @@ server <- function(input, output, session) {
   })
   
   # Preview Full File
-  output$contents <- renderDataTable({
+  output$contents <- DT::renderDataTable({
     validate(
       need(full_file_feature(),"")
     )
@@ -215,10 +215,10 @@ server <- function(input, output, session) {
         full_file_show <- full_file[1:50, 1:10]
       }
     }
-    full_file_show
+    datatable(full_file_show) %>% formatStyle(T, color="white", background="#2c3e4f")
   })
   
-  output$contents_taxa <- renderDataTable({
+  output$contents_taxa <- DT::renderDataTable({
     validate(
       need(full_file_taxa(),"")
     )
@@ -229,7 +229,7 @@ server <- function(input, output, session) {
     else{
       full_file_show <- full_file[1:50, 1:ncol(full_file)]
     }
-    full_file_show
+    datatable(full_file_show) %>% formatStyle(T, color="white", background="#2c3e4f")
   })
   
   output$temp_info1 <- renderUI({
@@ -257,7 +257,7 @@ server <- function(input, output, session) {
     HTML(paste('<br/>', m5, m6, sep = '<br/>'))
   })
   
-  output$temp_df <- renderDataTable({
+  output$temp_df <- DT::renderDataTable({
     if (input$input_type == "Biobakery"){
       Acc <- paste0("0000", 1:5)
       Feature <- paste0("Feature", 1:5)
@@ -279,7 +279,7 @@ server <- function(input, output, session) {
       colnames(num_mat) = paste0("Sample", 1:5)
       sample_df <- cbind(Acc, Feature, num_mat)
     }
-    sample_df
+    datatable(sample_df) %>% formatStyle(T, color="white", background="#2c3e4f")
   })
   
   output$temp_taxa <- renderDataTable({
@@ -290,7 +290,7 @@ server <- function(input, output, session) {
     }
     colnames(num_mat) = paste0("Sample", 1:5)
     sample_df <- cbind(Taxa, num_mat)
-    sample_df
+    datatable(sample_df) %>% formatStyle(T, color="white", background="#2c3e4f")
   })
   
   observe({
