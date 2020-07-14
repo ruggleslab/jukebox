@@ -1,3 +1,6 @@
+#when publsihing bioconductor source error
+#options(repos = BiocInstaller::biocinstallRepos())
+#getOption("repos")
 
 ### control size of input file
 options(shiny.maxRequestSize=200*1024^2)
@@ -1460,8 +1463,7 @@ server <- function(input, output, session) {
     ####
     p3 <- subplot(colorer(),
                   p, nrows = 2, margin = c(0,0,-0.01,0),
-                  heights = c(0.1, 0.9), shareX = T)
-    
+                  heights = c(0.1, 0.9), shareX = TRUE)
     p3
     
   })
@@ -3007,9 +3009,9 @@ server <- function(input, output, session) {
     
     
     ####
-    p3 <- subplot(colorer(),
+    p3=subplot(colorer(),
                   p, nrows = 2, margin = c(0,0,-0.01,0),
-                  heights = c(0.1, 0.9), shareX = T)
+                  heights = c(0.1, 0.9), shareX = TRUE)
     
     p3
     

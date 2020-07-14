@@ -1,0 +1,13 @@
+name: wham_v1
+title: wham_v1
+username:
+account: ruggleslab
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 215730
+bundleId: 3191407
+url: https://ruggleslab.shinyapps.io/wham_v1/
+when: 1590504659.23585
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: sample_input.tsv.zip|www/WHAM_workflow.pdf|www/WHAM_workflow.png|file_conversion_scripts

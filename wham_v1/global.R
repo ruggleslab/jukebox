@@ -913,21 +913,35 @@ aldex.ttest2 <- function (clr, conditions, paired.test = FALSE, hist.plot = FALS
     t.input <- sapply(mc.all, function(y) {
       y[, mc.i]
     })
+    #for (j in 1:nrow(t.input)){
+    #  wi.p.matrix[j, mc.i] <- wilcox.test(t.input[j,1:length(setA)], t.input[j,c(length(setA)+1):c(length(setA)+length(setB))], 
+    #                                      paired = paired.test)$p.value
+    #  
+    #  wi.BH.matrix[j, mc.i] <- p.adjust(wi.p.matrix[j, mc.i], 
+    #                                    method = "BH")
+    #  
+    #  #we.p.matrix[, mc.i] <- t.fast(t.input, setAsBinary, paired.test)
+    #  
+    #  we.p.matrix[j, mc.i] <- t.test(t.input[j,1:length(setA)], t.input[j,c(length(setA)+1):c(length(setA)+length(setB))], 
+    #                                 paired = paired.test)$p.value
+    #  
+    #  we.BH.matrix[j, mc.i] <- p.adjust(we.p.matrix[j, mc.i], 
+    #                                    method = "BH")
+    #}
+
     for (j in 1:nrow(t.input)){
-      wi.p.matrix[j, mc.i] <- wilcox.test(t.input[j,1:length(setA)], t.input[j,c(length(setA)+1):c(length(setA)+length(setB))], 
-                                          paired = paired.test)$p.value
-      
-      wi.BH.matrix[j, mc.i] <- p.adjust(wi.p.matrix[j, mc.i], 
-                                        method = "BH")
-      
-      #we.p.matrix[, mc.i] <- t.fast(t.input, setAsBinary, paired.test)
-      
-      we.p.matrix[j, mc.i] <- t.test(t.input[j,1:length(setA)], t.input[j,c(length(setA)+1):c(length(setA)+length(setB))], 
-                                     paired = paired.test)$p.value
-      
-      we.BH.matrix[j, mc.i] <- p.adjust(we.p.matrix[j, mc.i], 
-                                        method = "BH")
+    wi.p.matrix[j, mc.i] <- wilcox.test(t.input[j,1:length(setA)], t.input[j,c(length(setA)+1):c(length(setA)+length(setB))], 
+                                        paired = paired.test)$p.value
+    
+    #we.p.matrix[, mc.i] <- t.fast(t.input, setAsBinary, paired.test)
+    
+    we.p.matrix[j, mc.i] <- t.test(t.input[j,1:length(setA)], t.input[j,c(length(setA)+1):c(length(setA)+length(setB))], 
+                                   paired = paired.test)$p.value
     }
+  
+  
+    wi.BH.matrix[, mc.i] <- p.adjust(wi.p.matrix[, mc.i], method = "BH")
+    we.BH.matrix[, mc.i] <- p.adjust(we.p.matrix[, mc.i], method = "BH")
   }
   if (hist.plot == TRUE) {
     par(mfrow = c(2, 2))
