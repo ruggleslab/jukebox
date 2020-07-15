@@ -1752,14 +1752,15 @@ server <- function(input, output, session) {
   ### download uis
   
   output$gene_explore_download <- downloadHandler(
-    filename = function() { paste("feature_explore", '.png', sep='') },
+    filename = function() { paste("feature_explore", '.html', sep='') },
     content = function(file) {
       p3 <- gene_da_plotly()
       
       p3$width = 1200
       p3$height = 800
       
-      export(p3, file = file)
+      saveWidget(as_widget(p3), file, selfcontained = TRUE)
+      #export(p3, file = file)
       
     })
   
@@ -1767,7 +1768,7 @@ server <- function(input, output, session) {
   
   
   output$gene_explore_taxa_download <- downloadHandler(
-    filename = function() { paste("taxa_explore", '.png', sep='') },
+    filename = function() { paste("taxa_explore", '.html', sep='') },
     content = function(file) {
       
       tax_sel <- plot3_ggplot()+theme(legend.position='none',
@@ -1786,7 +1787,8 @@ server <- function(input, output, session) {
       p3$width = 1200
       p3$height = 800
     
-      export(p3, file = file)
+      saveWidget(as_widget(p3), file, selfcontained = TRUE)
+      #export(p3, file = file)
       
     }
   )
@@ -2261,21 +2263,22 @@ server <- function(input, output, session) {
   ### download uis
   
   output$sel_explore_download <- downloadHandler(
-    filename = function() { paste("select_explore", '.png', sep='') },
+    filename = function() { paste("select_explore", '.html', sep='') },
     content = function(file) {
       p3 <- plot1_plotly()
       
       p3$width = 1200
       p3$height = 800
       
-      export(p3, file = file)
+      saveWidget(as_widget(p3), file, selfcontained = TRUE)
+      #export(p3, file = file)
       
     })
   
   
   
   output$sel_explore_taxa_download <- downloadHandler(
-    filename = function() { paste("select_taxa", '.png', sep='') },
+    filename = function() { paste("select_taxa", '.html', sep='') },
     content = function(file) {
       
       tax_sel <- spec_select_ggplot()+theme(legend.position='none',
@@ -2294,7 +2297,8 @@ server <- function(input, output, session) {
       p3$width = 1200
       p3$height = 800
       
-      export(p3, file = file)
+      saveWidget(as_widget(p3), file, selfcontained = TRUE)
+      #export(p3, file = file)
       
     }
   )
@@ -2502,7 +2506,7 @@ server <- function(input, output, session) {
         tags$head(tags$style("#total_taxa_exp{font-size: 20px}")),
         fluidRow(column(12, uiOutput("key2"))),
         fluidRow(column(12, uiOutput("da_taxa_heat_UI"))),
-        fluidRow(downloadButton("species_heat_download", "Download Heatmap")),
+        fluidRow(downloadButton("shd", "Download Heatmap")),
         fluidRow(column(8, uiOutput("da_taxa_stat_ui"))),
         fluidRow(downloadButton("species_stat_download", "Download Heatmap"),
                  downloadButton("species_stat_results", "Download Stats"))
@@ -2709,7 +2713,7 @@ server <- function(input, output, session) {
   })
 
   output$species_download <- downloadHandler(
-    filename = function() { paste("taxa_explore", '.png', sep='') },
+    filename = function() { paste("taxa_explore", '.html', sep='') },
     content = function(file) {
       species = length(unique(spec_taxa_data()$Taxa))
       taxa_all <- species_explore_plot() + 
@@ -2729,7 +2733,8 @@ server <- function(input, output, session) {
       p3$width = 1200
       p3$height = 800
       
-      export(p3, file = file)
+      saveWidget(as_widget(p3), file, selfcontained = TRUE)
+      #export(p3, file = file)
       
     }
   )
@@ -3164,8 +3169,8 @@ server <- function(input, output, session) {
   })
   
   
-  output$species_heat_download <- downloadHandler(
-    filename = function() { paste("differential_taxa", '.png', sep='') },
+  output$shd <- downloadHandler(
+    filename = function() { paste("differential_taxa", '.html', sep='') },
     content = function(file) {
       species = length(unique(spec_taxa_data()$Taxa))
       
@@ -3174,7 +3179,8 @@ server <- function(input, output, session) {
       p3$width = 1200
       p3$height = 800
       
-      export(p3, file = file)
+      saveWidget(as_widget(p3), file, selfcontained = TRUE)
+      #orca(p3, file)
     }
   )
   
