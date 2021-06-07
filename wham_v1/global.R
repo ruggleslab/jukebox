@@ -13,6 +13,9 @@ library(matrixStats)
 library(webshot)
 library(ALDEx2)
 library(DT)
+library(operators)
+library(magrittr)
+#library(BiocParallel)
 
 
 

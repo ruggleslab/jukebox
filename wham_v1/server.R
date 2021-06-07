@@ -1,11 +1,18 @@
 #when publsihing bioconductor source error
 #options(repos = BiocInstaller::biocinstallRepos())
+#options(repos = BiocManager::repositories())
 #getOption("repos")
+#
+
 
 ### control size of input file
 options(shiny.maxRequestSize=200*1024^2)
 
-`%then%` <- shiny:::`%OR%`
+`%then%` <- function(a, b) {
+  if (is.null(a)) b else a
+}
+
+#`%then%` <- shiny:::`%OR%`
 
 server <- function(input, output, session) {
   
@@ -104,6 +111,7 @@ server <- function(input, output, session) {
           {fread(inFile$datapath, header=TRUE, sep='\t')})
         
         correct_cols <- c("Acc", "Feature", "Taxa")
+        validate(need(length(colnames(full_file))>1, paste0("The input file provided is not an appropriate format. Please view the sample input file provided in the Home Tab.")))
         colnames(full_file)[1:3] = correct_cols
         validate(
           need(class(full_file)!="try-error", paste0("The input file provided is not an appropriate format. Please view the sample input file provided in the Home Tab.")) %then%
@@ -1463,7 +1471,7 @@ server <- function(input, output, session) {
     ####
     p3 <- subplot(colorer(),
                   p, nrows = 2, margin = c(0,0,-0.01,0),
-                  heights = c(0.1, 0.9), shareX = TRUE)
+                  heights = c(0.1, 0.9), shareX = F)
     p3
     
   })
@@ -1582,7 +1590,7 @@ server <- function(input, output, session) {
     
     p3 <- subplot(colorer(), taxly,
                   nrows = 2, margin = c(0,0,-0.01,0),
-                  heights = c(0.1, 0.9), shareX = T, titleY = T)
+                  heights = c(0.1, 0.9), shareX = F, titleY = T)
     p3
   })
 
@@ -1688,8 +1696,8 @@ server <- function(input, output, session) {
                   breaks = breaker,
                   col = coler,
                   dendrogram = 'none',
-                  Rowv=F,
-                  Colv=F,
+                  Rowv=seq(1, nrow(resm)), ##dumb hack for 3.5.1
+                  Colv=seq(1, nrow(resm)),
                   margins=c(10,10),
                   cexRow=1.2,
                   cexCol=1.2#,
@@ -1781,7 +1789,7 @@ server <- function(input, output, session) {
       
       p3 <- subplot(colorer(), taxly,
                     nrows = 2, margin = c(0,0,-0.01,0),
-                    heights = c(0.1, 0.9), shareX = T, titleY = T)
+                    heights = c(0.1, 0.9), shareX = F, titleY = T)
       p3
       
       p3$width = 1200
@@ -1852,8 +1860,8 @@ server <- function(input, output, session) {
                     breaks = breaker,
                     col = coler,
                     dendrogram = 'none',
-                    Rowv=F,
-                    Colv=F,
+                    Rowv=seq(1, nrow(resm)), ##dumb hack for 3.5.1
+                    Colv=seq(1, nrow(resm)),
                     margins=c(7,7),
                     cexRow=1.2,
                     cexCol=1.2
@@ -1966,7 +1974,7 @@ server <- function(input, output, session) {
     ####
     p3 <- subplot(colorer(),
                   p, nrows = 2, margin = c(0,0,-0.01,0),
-                  heights = c(0.1, 0.9), shareX = T)
+                  heights = c(0.1, 0.9), shareX = F)
     
     p3
     
@@ -2091,7 +2099,7 @@ server <- function(input, output, session) {
     
     p3 <- subplot(colorer(), taxly,
                   nrows = 2, margin = c(0,0,-0.01,0),
-                  heights = c(0.1, 0.9), shareX = T, titleY = T)
+                  heights = c(0.1, 0.9), shareX = F, titleY = T)
     p3
   })
   
@@ -2209,8 +2217,8 @@ server <- function(input, output, session) {
               breaks = breaker,
               col = coler,
               dendrogram = 'none',
-              Rowv=F,
-              Colv=F,
+              Rowv=seq(1, nrow(resm)), ##dumb hack for 3.5.1
+              Colv=seq(1, nrow(resm)),
               margins=c(10,10),
               cexRow=1.2,
               cexCol=1.2
@@ -2291,7 +2299,7 @@ server <- function(input, output, session) {
       
       p3 <- subplot(colorer(), taxly,
                     nrows = 2, margin = c(0,0,-0.01,0),
-                    heights = c(0.1, 0.9), shareX = T, titleY = T)
+                    heights = c(0.1, 0.9), shareX = F, titleY = T)
       p3
       
       p3$width = 1200
@@ -2413,8 +2421,8 @@ server <- function(input, output, session) {
                     breaks = breaker,
                     col = coler,
                     dendrogram = 'none',
-                    Rowv=F,
-                    Colv=F,
+                    Rowv=seq(1, nrow(resm)), ##dumb hack for 3.5.1
+                    Colv=seq(1, nrow(resm)),
                     margins=c(7,7),
                     cexRow=1.2,
                     cexCol=1.2
@@ -2702,7 +2710,7 @@ server <- function(input, output, session) {
       
       p3 <- subplot(colorer(), taxly,
                     nrows = 2, margin = c(0,0,-0.01,0),
-                    heights = c(0.1, 0.9), shareX = T, titleY = T)
+                    heights = c(0.1, 0.9), shareX = F, titleY = T)
       p3
     }, message = "Rendering")
   })
@@ -2728,7 +2736,7 @@ server <- function(input, output, session) {
       
       p3 <- subplot(colorer(), taxly,
                     nrows = 2, margin = c(0,0,-0.01,0),
-                    heights = c(0.1, 0.9), shareX = T, titleY = T)
+                    heights = c(0.1, 0.9), shareX = F, titleY = T)
       
       p3$width = 1200
       p3$height = 800
@@ -3016,7 +3024,7 @@ server <- function(input, output, session) {
     ####
     p3=subplot(colorer(),
                   p, nrows = 2, margin = c(0,0,-0.01,0),
-                  heights = c(0.1, 0.9), shareX = TRUE)
+                  heights = c(0.1, 0.9), shareX = F)
     
     p3
     
@@ -3126,8 +3134,8 @@ server <- function(input, output, session) {
               breaks = breaker,
               col = coler,
               dendrogram = 'none',
-              Rowv=F,
-              Colv=F,
+              Rowv=seq(1, nrow(resm)), ##dumb hack for 3.5.1
+              Colv=seq(1, nrow(resm)),
               margins=c(10,10),
               cexRow=1.2,
               cexCol=1.2
@@ -3227,9 +3235,9 @@ server <- function(input, output, session) {
                     breaks = breaker,
                     col = coler,
                     dendrogram = 'none',
-                    Rowv=F,
-                    Colv=F,
-                    margins=c(7,7),
+                    Rowv=seq(1, nrow(resm)), ##dumb hack for 3.5.1
+                    Colv=seq(1, nrow(resm)),
+                    margins=c(5,5),
                     cexRow=1.2,
                     cexCol=1.2
       )

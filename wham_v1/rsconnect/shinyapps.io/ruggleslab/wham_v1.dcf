@@ -5,9 +5,9 @@ account: ruggleslab
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 215730
-bundleId: 3396471
+bundleId: 4689630
 url: https://ruggleslab.shinyapps.io/wham_v1/
-when: 1594838323.81853
+when: 1623102119.80035
+lastSyncTime: 1623102119.80036
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: sample_input.tsv.zip|www/WHAM_workflow.pdf|www/WHAM_workflow.png|file_conversion_scripts
